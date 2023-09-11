@@ -1,7 +1,7 @@
 # %%
-!pip install yfinance
-!pip install statsmodels
-!pip install tensorflow
+!pip3 install yfinance
+!pip3 install statsmodels
+!pip3 install tensorflow
 
 
 # %%
@@ -24,7 +24,7 @@ from tensorflow.keras.layers import LSTM, Dense
 # tickers = ['1301.TW', '1303.TW', '1326.TW', '6505.TW']
 tickers = ['TSLA']
 start_date = '2020-01-01'
-end_date = '2023-01-01'
+end_date = '2023-07-31'
 stock_data = yf.download(tickers=tickers, start=start_date, end=end_date)
 stock_data
 
@@ -72,7 +72,12 @@ model.compile(optimizer='adam', loss='mse')
 
 
 # %%
-model.fit(X_train, y_train, epochs=50, batch_size=8, validation_data=(X_valid, y_valid), verbose=1)
+model.fit(X_train, 
+          y_train, 
+          epochs=50, 
+          batch_size=8, 
+          validation_data=(X_valid, y_valid), 
+          verbose=1)
 
 
 # %%
@@ -88,9 +93,14 @@ predicted_adj_close
 
 
 # %%
+y_test_original = scaler.inverse_transform(np.column_stack((y_test, np.zeros_like(y_test))))[:, 0]
+y_test_original
+
+
+# %%
 # 绘制实际值与预测值图表
 plt.figure(figsize=(10, 6))
-plt.plot(data.index[train_size+valid_size+time_steps:], y_test, label='True Prices')
+plt.plot(data.index[train_size+valid_size+time_steps:], y_test_original, label='True Prices')
 plt.plot(data.index[train_size+valid_size+time_steps:], predicted_adj_close, label='Predicted Prices')
 plt.title('Actual vs Predicted Adj Close Prices for TSLA')
 plt.xlabel('Date')
@@ -98,8 +108,7 @@ plt.ylabel('Adj Close Price')
 plt.legend()
 plt.show()
 
-# %%
-y_test
+
 
 # %%
 # 分析相關係數

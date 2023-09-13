@@ -18,26 +18,33 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 
 
-
 # %%
 # 抓取股票資料
 # tickers = ['1301.TW', '1303.TW', '1326.TW', '6505.TW']
-tickers = ['TSLA']
-start_date = '2020-01-01'
-end_date = '2023-07-31'
-stock_data = yf.download(tickers=tickers, start=start_date, end=end_date)
-stock_data
+tickers = ['GRMN', 'VOO', 'TSLA', 'NVDA']
+start_date = '2019-01-01'
+end_date = '2023-09-12'
+data = yf.download(tickers=tickers, start=start_date, end=end_date)
+data
 
 
 # %%
-data = stock_data[['Adj Close', 'Volume']]
-data
+# 繪製股價圖
+plt.figure(figsize=(12, 4))
+plt.plot(data.index, data["Adj Close"], label="Price", color="b")
+plt.title("Stock Price")
+plt.xlabel("Date")
+plt.ylabel("Price")
+plt.legend()
+plt.grid(True)
+plt.show()
 
 
 # %%
 scaler = MinMaxScaler()
 data_scaled = scaler.fit_transform(data)
 data_scaled
+
 
 
 # %%
@@ -51,6 +58,10 @@ for i in range(len(data_scaled) - time_steps):
 X = np.array(X)
 y = np.array(y)
 print(X.shape, y.shape)
+
+
+# %%
+X
 
 
 # %%

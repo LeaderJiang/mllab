@@ -16,6 +16,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 from xgboost import XGBClassifier, plot_importance
 # from lightgbm import LGBMClassifier
 from mlxtend.plotting import plot_decision_regions
+import tensorflow as tf
 
 
 # %%
@@ -27,8 +28,8 @@ data.head()
 # %%
 # 擷取資料集
 X = data.drop(columns=["type", "approve"])
-y = data["approve"]
-# y = data["type"]
+# y = data["approve"]
+y = data["type"]
 feature_names = X.columns.to_list()
 target_names = y.value_counts().index.to_list()
 
@@ -226,6 +227,7 @@ plt.show()
 
 # %%
 # Tuning SVM
+# Best Parameters:  {'C': 10, 'degree': 3, 'gamma': 0.1, 'kernel': 'rbf'}
 param_grid = {'C': [0.1, 1, 10],
               'kernel': ['linear', 'rbf'],
               'gamma': [0.1, 1, 'auto'],
@@ -253,6 +255,7 @@ print("Test Accuracy: ", accuracy)
 
 # %%
 # Tunning Xgboost
+# Best Parameters: {'learning_rate': 0.1, 'max_depth': 5, 'n_estimators': 200, 'subsample': 0.9}
 param_grid = {
     'learning_rate': [0.01, 0.1, 0.2],
     'n_estimators': [50, 100, 200],
@@ -279,3 +282,63 @@ y_pred = best_estimator.predict(X_test)
 accuracy = accuracy_score(y_test, y_pred)
 print("Test Accuracy: ", accuracy)
 
+
+
+# %%
+y_test
+
+# %%
+# DNN
+y_train = tf.keras.utils.to_categorical(y_train, 5)
+y_test = tf.keras.utils.to_categorical(y_test, 5) 
+
+# %%
+
+# Build the neural network model
+model = tf.keras.Sequential([
+    tf.keras.layers.Dense(64, activation='relu', input_shape=(768,)),
+    tf.keras.layers.Dense(64, activation='relu'),
+    tf.keras.layers.Dense(5, activation='softmax')  # 3 output classes
+])
+
+# Compile the model
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+
+# Train the model
+model.fit(X_train, y_train, epochs=100, batch_size=16, validation_split=0.1, verbose=2)
+
+
+
+# %%
+# Evaluate the model on the test set
+loss, accuracy = model.evaluate(X_test, y_test, verbose=2)
+print(f"Test loss: {loss:.4f}, Test accuracy: {accuracy:.4f}")
+
+
+# %%
+# Predict
+y_pred = model.predict(X_test)
+y_pred_classes = np.argmax(y_pred, axis=1)
+y_true_classes = np.argmax(y_test, axis=1)
+pred_df = pd.DataFrame()
+pred_df["預測結果"] = y_pred_classes.tolist()
+pred_df["實際結果"] = y_true_classes.tolist()
+pred_df["是否正確"] = pred_df["預測結果"] == pred_df["實際結果"]
+pred_df
+
+
+# %%
+# Confusion Matrix
+confusion_matrix_df = pd.DataFrame(data=confusion_matrix(y_pred_classes, y_true_classes),
+                                   columns=target_names,
+                                   index=target_names)
+confusion_matrix_df
+
+
+# %%
+print(classification_report(y_pred_classes, y_true_classes,
+                            zero_division=0))
+
+
+# %%
